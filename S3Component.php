@@ -42,6 +42,21 @@ class S3Component extends Component {
      * @var object S3 Vendor instance
      */
     private $S3Vendor;
+
+    /**
+     * @var string Object Name of the latest added object
+     */
+    private $objectName;
+
+    /**
+     * @var string Amazon S3 Target Bucket
+     */
+    private $bucket     =   EXTERNAL_SERVICE_S3_BUCKET;
+
+    /**
+     * @var string Base URL of Amazon S3
+     */
+    private $baseUrlS3   =   'https://s3.amazonaws.com/';
     
     /*
     * =====================
@@ -64,19 +79,34 @@ class S3Component extends Component {
      *
      * @param string $path Absolute path of the file to upload
      * @param string $prefix Prefix (should be used to upload in folder, by exemple)
-     * @return bool $s3Result Result of the upload
+     * @return bool Result of the upload
      */
     public function addObjectFromFilePath( $path, $prefix = null ) {
+        $tmpObjectName =   $prefix . $this->random();
+
         $s3Result =   $this->S3Vendor->putObject(
             $this->S3Vendor->inputFile(
                 $path, false
             ),
-            EXTERNAL_SERVICE_S3_BUCKET,
-            $prefix . $this->random(),
+            $this->bucket,
+            $tmpObjectName,
             S3::ACL_PUBLIC_READ
         );
 
+        if( $s3Result ) {
+            $this->objectName  =   $tmpObjectName;
+        }
+
         return $s3Result;
+    }
+
+    /**
+     * Get the complete path of the latest added object
+     *
+     * @return string Path
+     */
+    public function url() {
+        return $this->baseUrlS3 . $this->bucket . '/' . $this->objectName;
     }
 
     /*
